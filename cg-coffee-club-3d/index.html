@@ -1,0 +1,85 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Atelier Vivo · CG Coffee Club 3D</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#2a2118;font-family:system-ui,sans-serif;touch-action:none}
+#hint{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#000a;color:#f5e9d4;padding:8px 14px;border-radius:14px;font-size:14px;text-align:center;max-width:90%;pointer-events:none}
+#joy{position:fixed;left:24px;bottom:30px;width:120px;height:120px;border-radius:50%;background:#fff2;border:2px solid #fff6}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#f5e9d4cc}
+#gyro{position:fixed;right:16px;bottom:30px;padding:10px 14px;border-radius:12px;border:0;background:#c8a27a;color:#2a2118;font-weight:bold}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#f5e9d4;font-size:18px;background:#2a2118}</style></head><body>
+<div id="load">Cargando galería…</div>
+<div id="hint">Joystick: caminar · Arrastra: mirar 360°<br><small>PC: WASD + arrastrar el mouse</small></div>
+<div id="joy"><div id="knob"></div></div><button id="gyro">📱 Giroscopio</button>
+<script src="three.min.js"></script><script src="tex.js"></script><script>
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(innerWidth,innerHeight);document.body.appendChild(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0xf3d9b0);S.fog=new THREE.Fog(0xf3d9b0,25,60);
+const C=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.05,100);
+S.add(new THREE.HemisphereLight(0xfff1dc,0x8a6a48,0.6));const sun=new THREE.DirectionalLight(0xffe0b0,0.5);sun.position.set(-5,10,-8);S.add(sun);
+const L=new THREE.TextureLoader(),M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85},o));
+const wood=M(0xa87a50),dark=M(0x5a3e28),cream=M(0xf2e8d6),beige=M(0xd9c7a5),metal=M(0xb8bcc0,{metalness:.8,roughness:.35});
+const box=(w,h,d,m,x,y,z,col)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);S.add(b);if(col)cols.push([x-w/2,x+w/2,z-d/2,z+d/2]);return b};
+const cols=[];const H=3.2;
+// floor/ceiling/street
+box(10,.1,11.5,beige,5,-.05,5.75);box(10,.1,11.5,cream,5,H+.05,5.75);box(30,.05,12,M(0x9a9088),5,-.08,-6);box(10,1,.3,cream,5,H+.5,-.1);
+// outer walls (front with door gap x4-6 and glass)
+box(4,H,.2,wood,2,H/2,0,1);box(4,H,.2,wood,8,H/2,0,1);box(2,.6,.2,wood,5,H-.3,0);
+[[1.1],[8.9]].forEach(([x])=>{const g=box(1.6,2.2,.05,new THREE.MeshStandardMaterial({color:0xcfe6ee,transparent:true,opacity:.25}),x+(x<5?.9:-.9),1.3,-.12)});
+box(.2,H,11.5,cream,0,H/2,5.75,1);box(.2,H,11.5,cream,10,H/2,5.75,1);box(10,H,.2,cream,5,H/2,11.5,1);
+// storage wall z=10 with door
+box(7.5,H,.15,cream,3.75,H/2,10,1);box(1.5,H,.15,cream,9.75,H/2,10,1);box(1,.8,.15,cream,8.5,H-.4,10);
+// bath + fitting
+box(1.6,H,.15,cream,.8,H/2,8,1);box(1.6,H,.15,cream,3.3,H/2,8,1);box(.15,H,2,cream,2.5,H/2,9,1);box(.15,H,2,cream,5,H/2,9,1);
+box(.9,.8,.15,dark,2.05,H-.4,8);
+const label=(t,x,y,z,ry=0,s=1,bg='#00000000',fg='#3a2e20')=>{const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.fillStyle=fg;let fs=54;do{g.font='bold '+fs+'px Georgia';fs-=2}while(g.measureText(t).width>490);g.textAlign='center';g.textBaseline='middle';g.fillText(t,256,64);const m=new THREE.Mesh(new THREE.PlaneGeometry(2*s,.5*s),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m)};
+label('BAÑO',.8,2.3,7.9,Math.PI,.6);label('PROBADOR',3.3,2.3,7.9,Math.PI,.6);label('BODEGA',8.5,2.9,9.9,Math.PI,.5);
+// fitting room curtain
+box(.05,2.2,1.2,M(0xb07a4a),3.75,1.1,8.05);
+// storefront sign: C metal + G wood
+const tx=t=>{const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d');g.font='bold 230px Georgia';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText(t,128,140);const k=new THREE.CanvasTexture(c);return k};
+[['C',metal,5.5],['G',wood,4.5]].forEach(([t,m,x])=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({color:m.color,metalness:m.metalness,roughness:.4,alphaMap:tx(t),transparent:true}));p.scale.setScalar(.55);p.position.set(x*.55+2.25,3.45,-.27);p.rotation.y=Math.PI;S.add(p)});
+label('ATELIER VIVO · CG COFFEE CLUB',5,2.9,-.13,Math.PI,1.6,'#e9d6b5');
+// potted trees
+const tree=(x,z,s=1)=>{box(.5*s,.5*s,.5*s,M(0xc9a27e),x,.25*s,z);const t=new THREE.Mesh(new THREE.CylinderGeometry(.05,.07,1.4*s),dark);t.position.set(x,1.1*s,z);S.add(t);const f=new THREE.Mesh(new THREE.SphereGeometry(.6*s,10,8),M(0x7d9460));f.position.set(x,1.9*s,z);S.add(f)};
+tree(3.2,-.7);tree(6.8,-.7);tree(5,4,1.2);cols.push([4.7,5.3,3.7,4.3]);
+// café bar
+box(.8,1.05,3.5,wood,.6,.52,4.5,1);box(.82,.05,3.55,dark,.6,1.07,4.5);box(.5,.45,.4,metal,.6,1.3,3.6);
+box(.15,1.6,4,dark,.08,1.9,4.5);for(let i=0;i<3;i++)box(.3,.4,.25,M(0xc2a173),.3,1.3,5+i*.35);
+label('CAFÉ MEXICANO',.12,2.7,4.5,Math.PI/2,.9);
+[[2.4,3.2],[3.8,3.2],[2.4,5.2],[3.8,5.2],[3.1,6.8]].forEach(([x,z])=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.05,20),wood);t.position.set(x,.75,z);S.add(t);box(.12,.75,.12,dark,x,.37,z);cols.push([x-.45,x+.45,z-.45,z+.45]);[[-.65,0],[.65,0]].forEach(([dx])=>{box(.4,.45,.4,dark,x+dx,.22,z);box(.4,.5,.05,dark,x+dx,.7,z+.18)});const cup=new THREE.Mesh(new THREE.CylinderGeometry(.04,.035,.08,10),cream);cup.position.set(x+.1,.82,z);S.add(cup)});
+// gallery: frames on walls
+const art=(i,x,z,ry,w=1.0)=>{const t=L.load(TEX[i]);t.encoding=THREE.sRGBEncoding;const h=i<5?w*1.78:w*1.33;box(w+.12,h+.12,.05,dark,x,1.65,z).rotation.y=ry;const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t}));p.position.set(x+Math.sin(ry)*.04,1.65,z+Math.cos(ry)*.04);p.rotation.y=ry;S.add(p);const sp=new THREE.SpotLight(0xffe2b8,.6,5,.5,.6);sp.position.set(x+Math.sin(ry)*1.2,H-.1,z+Math.cos(ry)*1.2);sp.target=p;S.add(sp)};
+art(5,9.88,2.9,-Math.PI/2,1.1);art(6,9.88,4.5,-Math.PI/2,1.1);art(2,6.2,.12,0,.8);art(4,8.2,.12,0,.8);art(8,4.6,11.38,Math.PI,1);art(3,1.2,9.88,Math.PI,.6);
+// gallery partition (free wall) with art both sides
+box(2.2,2.6,.15,cream,6.6,1.3,6,1);art(1,6.6,6.08,0,.7);art(7,6.6,5.92,Math.PI,1);
+// sculptures
+const plinth=(x,z,k)=>{box(.5,1,.5,cream,x,.5,z,1);let g;if(k==0)g=new THREE.TorusKnotGeometry(.18,.06,60,8);else if(k==1)g=new THREE.IcosahedronGeometry(.25,0);else g=new THREE.ConeGeometry(.2,.6,6);const s=new THREE.Mesh(g,k==1?wood:metal);s.position.set(x,1.35,z);S.add(s);sculpt.push(s)};
+const sculpt=[];plinth(7.2,3.2,0);plinth(8.6,4.6,1);plinth(7.4,4.8,2);
+// clothing zone
+const rack=(x,z,ry)=>{const g=new THREE.Group();const bar=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.6),wood);bar.rotation.z=Math.PI/2;bar.position.y=1.5;g.add(bar);[-.8,.8].forEach(d=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.05,1.5,.05),wood);p.position.set(d,.75,0);g.add(p)});const cs=[0xe8dcc4,0xd9cbb0,0xc78a3c,0x3d5a80,0xb9a27c,0x7a8a5a];for(let i=0;i<7;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.18,.75,.45),M(cs[i%6]));s.position.set(-.6+i*.2,1.08,0);g.add(s)}g.position.set(x,0,z);g.rotation.y=ry;S.add(g);cols.push([x-.85,x+.85,z-.3,z+.3])};
+rack(7.5,7.2,0);rack(7.5,8.9,0);box(.25,1.6,1.8,wood,9.85,1.4,8,1);
+box(1.2,.75,.7,wood,6,.37,8,1);for(let i=0;i<3;i++)box(.35,.08*(3-i)+.1,.3,M([0xe8dcc4,0xc78a3c,0xd9cbb0][i]),5.65+i*.38,.8,8);
+label('CG Coffee Club',9.7,2.5,8,-Math.PI/2,.8,'#e9d6b5');
+const mir=box(.7,1.8,.03,M(0xdfe8ec,{metalness:.9,roughness:.1}),9.8,1,9.6);mir.rotation.y=-Math.PI/2;
+// warm ceiling lights
+[[2.5,3],[2.5,6],[7.5,4],[7.5,8],[5,1]].forEach(([x,z])=>{const l=new THREE.PointLight(0xffd29a,.35,8);l.position.set(x,H-.3,z);S.add(l);const b=new THREE.Mesh(new THREE.SphereGeometry(.08),new THREE.MeshBasicMaterial({color:0xfff0c8}));b.position.copy(l.position);S.add(b);box(.01,.3,.01,dark,x,H-.15,z)});
+// controls
+let yaw=Math.PI,pitch=0,mv={x:0,z:0},keys={},gyro=false,g0=null;C.position.set(5,1.6,-7);
+const joy=document.getElementById('joy'),knob=document.getElementById('knob');let jid=null,lid=null,lx,ly;
+addEventListener('pointerdown',e=>{if(e.target.id=='gyro')return;const r=joy.getBoundingClientRect();if(e.clientX<r.right+40&&e.clientY>r.top-40&&jid===null){jid=e.pointerId;joyMove(e)}else if(lid===null){lid=e.pointerId;lx=e.clientX;ly=e.clientY}document.getElementById('hint').style.opacity=.4});
+function joyMove(e){const r=joy.getBoundingClientRect();let dx=e.clientX-(r.left+60),dy=e.clientY-(r.top+60);const d=Math.hypot(dx,dy);if(d>50){dx*=50/d;dy*=50/d}knob.style.left=35+dx+'px';knob.style.top=35+dy+'px';mv.x=dx/50;mv.z=dy/50}
+addEventListener('pointermove',e=>{if(e.pointerId===jid)joyMove(e);else if(e.pointerId===lid){yaw-=(e.clientX-lx)*.005;pitch-=(e.clientY-ly)*.005;pitch=Math.max(-1.3,Math.min(1.3,pitch));lx=e.clientX;ly=e.clientY}});
+const up=e=>{if(e.pointerId===jid){jid=null;mv={x:0,z:0};knob.style.left=knob.style.top='35px'}if(e.pointerId===lid)lid=null};addEventListener('pointerup',up);addEventListener('pointercancel',up);
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=1);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+document.getElementById('gyro').onclick=async()=>{try{if(typeof DeviceOrientationEvent!='undefined'&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();gyro=!gyro;g0=null;document.getElementById('gyro').textContent=gyro?'📱 Giroscopio ON':'📱 Giroscopio'}catch(e){alert('Giroscopio no disponible')}};
+const ori=new THREE.Quaternion();let gq=null;addEventListener('deviceorientation',e=>{if(e.alpha==null)return;const eu=new THREE.Euler(THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.alpha),-THREE.MathUtils.degToRad(e.gamma),'YXZ');gq=new THREE.Quaternion().setFromEuler(eu).multiply(new THREE.Quaternion(-Math.SQRT1_2,0,0,Math.SQRT1_2));const so=(screen.orientation&&screen.orientation.angle||0)*Math.PI/180;gq.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-so))});
+const hit=(x,z)=>{if(z<-11||z>11.3||x<-8||x>18)return 1;for(const c of cols)if(x>c[0]-.3&&x<c[1]+.3&&z>c[2]-.3&&z<c[3]+.3)return 1;return 0};
+let t0=performance.now();function loop(t){const dt=Math.min(.05,(t-t0)/1000);t0=t;
+let f=-mv.z+(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0),s=mv.x+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+if(gyro&&gq){if(!g0){g0=yaw-new THREE.Euler().setFromQuaternion(gq,'YXZ').y}const e=new THREE.Euler().setFromQuaternion(gq,'YXZ');yaw=e.y+g0;pitch=e.x}
+const sp=2.2*dt,nx=C.position.x+(-Math.sin(yaw)*f+Math.cos(yaw)*s)*sp,nz=C.position.z+(-Math.cos(yaw)*f-Math.sin(yaw)*s)*sp;
+if(!hit(nx,C.position.z))C.position.x=nx;if(!hit(C.position.x,nz))C.position.z=nz;
+C.rotation.set(pitch,yaw,0,'YXZ');sculpt.forEach((o,i)=>o.rotation.y+=dt*(.3+i*.1));R.render(S,C);requestAnimationFrame(loop)}
+addEventListener('resize',()=>{C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix();R.setSize(innerWidth,innerHeight)});
+THREE.DefaultLoadingManager.onLoad=()=>document.getElementById('load').remove();setTimeout(()=>{const l=document.getElementById('load');l&&l.remove()},6000);
+requestAnimationFrame(loop);
+</script></body></html>
